@@ -1,4 +1,4 @@
-package br.com.hrdev.Grafos.utils;
+package br.com.senacrs.grafos.utils;
 
 import java.util.Properties;
 
