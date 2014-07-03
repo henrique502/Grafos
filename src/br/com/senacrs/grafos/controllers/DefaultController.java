@@ -1,79 +1,66 @@
 package br.com.senacrs.grafos.controllers;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.List;
 
-import br.com.senacrs.grafos.libraries.GrafosFileBrowser;
-import br.com.senacrs.grafos.libraries.GrafosFileReader;
-import br.com.senacrs.grafos.utils.Text;
-import br.com.senacrs.grafos.views.Window;
+import br.com.senacrs.grafos.libraries.grafo.Dijkstra;
+import br.com.senacrs.grafos.libraries.grafo.GrafoMatriz;
+import br.com.senacrs.grafos.libraries.grafo.Vertice;
+import br.com.senacrs.grafos.models.Linha;
+import br.com.senacrs.grafos.models.Ponto;
 
 public class DefaultController {
-	
-	@SuppressWarnings("unused")
-	private static Text textCache = null;
-	
-	private Window window;
-	private File defaultLocation = null;
-	
+
 	public DefaultController(String[] params) throws Exception {
-		initParams(params);
-		textCache = new Text(getPropertiesFile("texts"));
-		window = new Window();
-		setupFile();
 		setup();
 	}
 
-	private void initParams(String[] params) throws IllegalArgumentException {
-		int size = params.length;
-		
-		if(size == 0) return;
-		if(size != 1) throw new IllegalArgumentException("o programa deve receber 0 ou 1 parametro(s)");
-		
-		File location = new File(params[0]);
-		
-		if(!location.exists()) throw new IllegalArgumentException("o arquivo nao existe");
-		if(!location.canRead()) throw new IllegalArgumentException("o arquivo nao esta acessivel para leitura");
-		
-		defaultLocation = location;
-	}
-	
-	private void setupFile() throws IllegalArgumentException, Exception {
-		if(defaultLocation != null) return;
-		
-		GrafosFileBrowser browser = new GrafosFileBrowser();
-		int option = browser.showOpenDialog(window);
-		
-		switch(option){
-			case GrafosFileBrowser.APPROVE_OPTION : defaultLocation = browser.getSelectedFile(); break;
-			default : throw new Exception("voce deve selecionar algum arquivo para continuar");
-		}
-
-		if(!defaultLocation.exists()) throw new IllegalArgumentException("o arquivo nao existe");
-		if(!defaultLocation.canRead()) throw new IllegalArgumentException("o arquivo nao esta acessivel para leitura");
-	}
-
 	private void setup() throws IOException, FileNotFoundException {
-		Object ob = new GrafosFileReader().parseFile(defaultLocation);
+		//GrafoMatriz<Linha, Ponto> grafo = new GrafosFileReader().parseFile(new File("/grafo.txt"));
 		
+		GrafoMatriz<Linha, Ponto> grafo = new GrafoMatriz<Linha, Ponto>(7);
+		populate(grafo);
+		
+		Dijkstra<Linha, Ponto> algo = new Dijkstra<Linha, Ponto>();
+		List<Vertice<Ponto>> lista = algo.getMelhorCaminho(grafo, grafo.getVertices().get(5), grafo.getVertices().get(1));
+		
+		System.out.println(lista);
+		
+		System.exit(0);
 		
 	}
 
-	private Properties getPropertiesFile(String file) throws Exception {
-		Properties prop = null;
-		InputStream input = null;
-		try {
-			prop = new Properties();
-			input = getClass().getResourceAsStream("/assets/properties/" + file + ".properties");
-			prop.load(input);
-		} finally {
-			input.close();
-		}
+	private void populate(GrafoMatriz<Linha, Ponto> grafo) {
+		grafo.addVertice(new Ponto(0, 0, 0));
+		grafo.addVertice(new Ponto(1, 3, 10));
+		grafo.addVertice(new Ponto(2, 4, 10));
+		grafo.addVertice(new Ponto(3, 3, 10));
+		grafo.addVertice(new Ponto(4, 3, 10));
+		grafo.addVertice(new Ponto(5, 6, 10));
+		grafo.addVertice(new Ponto(6, 1, 10));
 		
-		return prop;
+		addAresta(grafo, 1, 2, 3);
+		addAresta(grafo, 1, 3, 4);
+		addAresta(grafo, 2, 3, 3);
+		addAresta(grafo, 2, 4, 3);
+		addAresta(grafo, 3, 4, 1);
+		
+		addAresta(grafo, 2, 5, 6);
+		addAresta(grafo, 3, 6, 2);
+		addAresta(grafo, 4, 5, 2);
+		addAresta(grafo, 5, 6, 5);
+		
+	}
+
+	private void addAresta(GrafoMatriz<Linha, Ponto> grafo, int start, int end, double peso) {
+		Ponto s = getPoint(grafo, start).getDado();
+		Ponto e = getPoint(grafo, end).getDado();
+		Linha l = new Linha(start, end, peso);
+		grafo.addAresta(s, e, l);
 	}
 	
+	private Vertice<Ponto> getPoint(GrafoMatriz<Linha, Ponto> grafo, int index){
+		return grafo.getVertices().get(index);
+	}
 }
